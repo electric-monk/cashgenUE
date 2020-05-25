@@ -147,6 +147,7 @@ void FCGTerrainGeneratorWorker::ProcessTerrainMap()
 	}
 
 	// Then put the biome map into the Green vertex colour channel
+	/*
 	if (pTerrainConfig.BiomeBlendGenerator)
 	{
 		exX -= 2;
@@ -163,6 +164,7 @@ void FCGTerrainGeneratorWorker::ProcessTerrainMap()
 			}
 		}
 	}
+	*/
 }
 
 void FCGTerrainGeneratorWorker::ProcessPerBlockGeometry()
@@ -395,9 +397,6 @@ void FCGTerrainGeneratorWorker::GetNormalFromHeightMapForVertex(const int32& ver
 	result = n1 + n2 + n3 + n4;
 
 	aOutNormal = result.GetSafeNormal();
-
-	// We can mega cheap out here as we're dealing with a simple flat grid
-	//aOutTangent = FRuntimeMeshTangent(left.GetSafeNormal(), false);
 }
 
 void FCGTerrainGeneratorWorker::UpdateOneBlockGeometry(const int32& aX, const int32& aY, int32& aVertCounter, int32& triCounter)

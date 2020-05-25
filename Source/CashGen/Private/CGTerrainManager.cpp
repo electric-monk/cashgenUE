@@ -520,15 +520,6 @@ bool ACGTerrainManager::AllocateDataStructuresForLOD(FCGMeshData* aData, FCGTerr
 			aData->MyTriangles[triCounter] = (thisX + 1) + ((thisY + 1) * (rowLength));
 			triCounter++;
 
-			////TR
-			//aData->MyVertexData[thisX + ((thisY + 1) * (rowLength))].UV0 = FVector2D((thisX / rowLength) * maxUV, ((thisY / rowLength) + 1.0f) * maxUV);
-			////BR
-			//aData->MyVertexData[thisX + (thisY * (rowLength))].UV0 = FVector2D((thisX / rowLength) * maxUV, (thisY / rowLength) * maxUV);
-			////BL
-			//aData->MyVertexData[(thisX + 1) + (thisY * (rowLength))].UV0 = FVector2D(((thisX / rowLength) + 1.0f) * maxUV, (thisY / rowLength) * maxUV);
-			////TL
-			//aData->MyVertexData[(thisX + 1) + ((thisY + 1) * (rowLength))].UV0 = FVector2D(((thisX / rowLength) + 1.0f)* maxUV, ((thisY / rowLength) + 1.0f) * maxUV);
-
 			//TR
 			aData->MyUV0[thisX + ((thisY + 1) * (rowLength))] = FVector2D(thisX * 1.0f / rowLength, (thisY + 1.0f) / rowLength);
 			//BR

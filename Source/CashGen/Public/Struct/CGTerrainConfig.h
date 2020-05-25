@@ -43,7 +43,7 @@ struct FCGTerrainConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Scale")
 	float UnitSize = 300.0f;
 	/** Multiplier for heightmap*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "cashGen|Scale")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Scale")
 	float Amplitude = 5000.0f;
 
 	/** Material for the terrain mesh */
