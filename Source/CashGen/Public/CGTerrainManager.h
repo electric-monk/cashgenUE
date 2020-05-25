@@ -3,6 +3,7 @@
 #include "CashGen/Public/CGMcQueue.h"
 #include "CashGen/Public/CGObjectPool.h"
 #include "CashGen/Public/CGSettings.h"
+#include "CashGen/Public/WorldHeightInterface.h"
 #include "CashGen/Public/Struct/CGJob.h"
 #include "CashGen/Public/Struct/CGLODMeshData.h"
 #include "CashGen/Public/Struct/CGMeshData.h"
@@ -39,7 +40,7 @@ public:
 
 	/* Main entry point for starting terrain generation */
 	UFUNCTION(BlueprintCallable, Category = "CashGen")
-	void SetupTerrainGenerator(UUFNNoiseGenerator* aHeightmapGenerator, UUFNNoiseGenerator* aBiomeGenerator /*FCGTerrainConfig aTerrainConfig*/);
+	void SetupTerrainGenerator(TScriptInterface<IWorldHeightInterface> worldHeightInterface);
 
 	/* Add a new actor to track and generate terrain tiles around */
 	UFUNCTION(BlueprintCallable, Category = "CashGen")

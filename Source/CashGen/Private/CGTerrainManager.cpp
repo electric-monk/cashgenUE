@@ -293,12 +293,9 @@ int ACGTerrainManager::GetLODForRange(const int32 aRange)
 	return lowestLOD != 999 ? lowestLOD : -1;
 }
 
-void ACGTerrainManager::SetupTerrainGenerator(UUFNNoiseGenerator* aHeightmapGenerator, UUFNNoiseGenerator* aBiomeGenerator)
+void ACGTerrainManager::SetupTerrainGenerator(TScriptInterface<IWorldHeightInterface> worldHeightInterface)
 {
-	//	myTerrainConfig = aTerrainConfig;
-
-	myTerrainConfig.NoiseGenerator = aHeightmapGenerator;
-	myTerrainConfig.BiomeBlendGenerator = aBiomeGenerator;
+	myTerrainConfig.WorldHeightInterface = worldHeightInterface;
 
 	myTerrainConfig.TileOffset = FVector(myTerrainConfig.UnitSize * myTerrainConfig.TileXUnits * 0.5f, myTerrainConfig.UnitSize * myTerrainConfig.TileYUnits * 0.5f, 0.0f);
 

@@ -9,7 +9,7 @@ public class CashGen : ModuleRules
         
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "RenderCore", "RHI" });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { "UnrealFastNoisePlugin", "ProceduralMeshComponent"  });
+        PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent"  });
       
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
     }

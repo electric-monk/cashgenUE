@@ -3,8 +3,6 @@
 
 #include <ProceduralMeshComponent/Public/ProceduralMeshComponent.h>
 
-#include <UnrealFastNoisePlugin/Public/UFNNoiseGenerator.h>
-
 #include <chrono>
 
 DECLARE_CYCLE_STAT(TEXT("CashGenStat ~ HeightMap"), STAT_HeightMap, STATGROUP_CashGenStat);
@@ -65,26 +63,6 @@ uint32 FCGTerrainGeneratorWorker::Run()
 												   startMs)
 													  .count();
 
-			startMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-				std::chrono::system_clock::now().time_since_epoch());
-
-			if (workLOD == 0)
-			{
-				{
-					SCOPE_CYCLE_COUNTER(STAT_Erosion);
-
-					for (int32 i = 0; i < pTerrainConfig.DropletAmount; ++i)
-					{
-						ProcessSingleDropletErosion();
-					}
-				}
-			}
-
-			workJob.ErosionGenerationDuration = (std::chrono::duration_cast<std::chrono::milliseconds>(
-													 std::chrono::system_clock::now().time_since_epoch()) -
-												 startMs)
-													.count();
-
 			ProcessPerBlockGeometry();
 			ProcessPerVertexTasks();
 			ProcessSkirtGeometry();
@@ -132,6 +110,7 @@ void FCGTerrainGeneratorWorker::ProcessTerrainMap()
 	const int32 XYunits = workLOD == 0 ? pTerrainConfig.TileXUnits : pTerrainConfig.TileXUnits / pTerrainConfig.LODs[workLOD].ResolutionDivisor;
 	const int32 exUnitSize = workLOD == 0 ? pTerrainConfig.UnitSize : pTerrainConfig.UnitSize * pTerrainConfig.LODs[workLOD].ResolutionDivisor;
 
+	UObject* WorldInterfaceObject = pTerrainConfig.WorldHeightInterface.GetObject();
 	// Calculate the new noisemap
 	for (int y = 0; y < exY; ++y)
 	{
@@ -140,7 +119,7 @@ void FCGTerrainGeneratorWorker::ProcessTerrainMap()
 			int32 worldX = (((workJob.mySector.X * XYunits) + x) * exUnitSize) - exUnitSize;
 			int32 worldY = (((workJob.mySector.Y * XYunits) + y) * exUnitSize) - exUnitSize;
 
-			pMeshData->HeightMap[x + (exX * y)] = pTerrainConfig.NoiseGenerator->GetNoise2D(worldX, worldY);
+			pMeshData->HeightMap[x + (exX * y)] = IWorldHeightInterface::Execute_GetHeightAtPoint(WorldInterfaceObject, worldX, worldY);
 		}
 	}
 	// Put heightmap into Red channel
@@ -184,118 +163,6 @@ void FCGTerrainGeneratorWorker::ProcessTerrainMap()
 			}
 		}
 	}
-}
-
-void FCGTerrainGeneratorWorker::AddDepositionToHeightMap()
-{
-	int32 index = 0;
-	for (float& heightPoint : pMeshData->HeightMap)
-	{
-		//heightPoint.Z += (*pDepositionMap)[index];
-		++index;
-	}
-}
-
-void FCGTerrainGeneratorWorker::erodeHeightMapAtIndex(int32 aX, int32 aY, float aAmount)
-{
-	int32 XUnits = GetNumberOfNoiseSamplePoints();
-	float mod1 = 0.5f;
-	float mod2 = 0.4f;
-
-	pMeshData->HeightMap[aX + (XUnits * aY)] -= aAmount;
-	pMeshData->HeightMap[aX + (XUnits * (aY + 1))] -= aAmount * mod1;
-	pMeshData->HeightMap[aX + (XUnits * (aY - 1))] -= aAmount * mod1;
-	pMeshData->HeightMap[aX + 1 + (XUnits * (aY))] -= aAmount * mod1;
-	pMeshData->HeightMap[aX - 1 + (XUnits * (aY))] -= aAmount * mod1;
-
-	pMeshData->HeightMap[aX + 1 + (XUnits * (aY + 1))] -= aAmount * mod1;
-	pMeshData->HeightMap[aX + 1 + (XUnits * (aY - 1))] -= aAmount * mod1;
-	pMeshData->HeightMap[aX - 1 + (XUnits * (aY + 1))] -= aAmount * mod1;
-	pMeshData->HeightMap[aX - 1 + (XUnits * (aY - 1))] -= aAmount * mod1;
-
-	// Add to the Red channel for deposition
-	if (aAmount > 0.0f)
-	{
-		//pMeshData->MyVertexData[aX - 1 + ((XUnits - 2) * (aY - 1))].Color.R = FMath::Clamp(pMeshData->MyVertexData[aX - 1 + ((XUnits - 2) * (aY - 1))].Color.R + FMath::RoundToInt(aAmount), 0, 255);
-	}
-	// Add to the blue channel for erosion
-	if (aAmount <= 0.0f)
-	{
-		//pMeshData->MyVertexData[aX - 1 + ((XUnits - 2) * (aY - 1))].Color.B = FMath::Clamp(pMeshData->MyVertexData[aX - 1 + ((XUnits - 2) * (aY - 1))].Color.B + FMath::RoundToInt(aAmount * 0.01f), 0, 255);
-	}
-}
-
-void FCGTerrainGeneratorWorker::ProcessSingleDropletErosion()
-{
-	int32 XUnits = GetNumberOfNoiseSamplePoints();
-	int32 YUnits = XUnits;
-
-	// Pick a random start point that isn't on an edge
-	int32 cX = FMath::RandRange(1, XUnits - 1);
-	int32 cY = FMath::RandRange(1, YUnits - 1);
-
-	float sedimentAmount = 0.0f;
-	float waterAmount = 1.0f;
-	FVector velocity = FVector(0.0f, 0.0f, 1.0f);
-
-	//while (waterAmount > 0.0f && cX > 0 && cX < XUnits - 1 && cY > 0 && cY < YUnits - 1)
-	//{
-	//	FVector origin = pMeshData->HeightMap[cX + (XUnits * cY)];
-	//	if (origin.Z < pTerrainConfig->DropletErosionFloor)
-	//	{
-	//		// Don't care about underwater erosion
-	//		break;
-	//	}
-	//	FVector up = (pMeshData->HeightMap[cX + (XUnits * (cY + 1))] - origin).GetSafeNormal();
-	//	FVector down = (pMeshData->HeightMap[cX + (XUnits * (cY - 1))] - origin).GetSafeNormal();
-	//	FVector left = (pMeshData->HeightMap[cX + 1 + (XUnits * (cY))] - origin).GetSafeNormal();
-	//	FVector right = (pMeshData->HeightMap[cX - 1 + (XUnits * (cY))] - origin).GetSafeNormal();
-
-	//	FVector upleft = (pMeshData->HeightMap[cX + 1 + (XUnits * (cY + 1))] - origin).GetSafeNormal();
-	//	FVector downleft = (pMeshData->HeightMap[cX + 1 + (XUnits * (cY - 1))] - origin).GetSafeNormal();
-	//	FVector upright = (pMeshData->HeightMap[cX - 1 + (XUnits * (cY + 1))] - origin).GetSafeNormal();
-	//	FVector downright = (pMeshData->HeightMap[cX - 1 + (XUnits * (cY - 1))] - origin).GetSafeNormal();
-
-	//	FVector lowestRoute = FVector(0.0f);
-
-	//	int32 newCx = cX;
-	//	int32 newCy = cY;
-
-	//	if (up.Z < lowestRoute.Z) { lowestRoute = up; newCy++; }
-	//	if (down.Z < lowestRoute.Z) { lowestRoute = down; newCy--; }
-	//	if (left.Z < lowestRoute.Z) { lowestRoute = left; newCx++; }
-	//	if (right.Z < lowestRoute.Z) { lowestRoute = right; newCx--; }
-	//	if (upleft.Z < lowestRoute.Z) { lowestRoute = upleft; newCy++; newCx++; }
-	//	if (upright.Z < lowestRoute.Z) { lowestRoute = upright; newCy++; newCx--; }
-	//	if (downleft.Z < lowestRoute.Z) { lowestRoute = downleft; newCy--; newCx++; }
-	//	if (downright.Z < lowestRoute.Z) { lowestRoute = downright; newCy--; newCx--; }
-
-	//	// The amount of sediment to pick up depends on if we are hitting an obstacle
-	//	float sedimentUptake = pTerrainConfig->DropletErosionMultiplier * FVector::DotProduct(velocity, lowestRoute);
-	//	if (sedimentUptake < 0.0f) { sedimentUptake = 0.0f; }
-
-	//	sedimentAmount += sedimentUptake;
-
-	//	float sedimentDeposit = 0.0f;
-	//	// Deposit sediment if we are carrying too much
-	//	if (sedimentAmount > pTerrainConfig->DropletSedimentCapacity)
-	//	{
-	//		sedimentDeposit = (sedimentAmount - pTerrainConfig->DropletSedimentCapacity) * pTerrainConfig->DropletDespositionMultiplier;
-	//	}
-
-	//	// Deposit based on slope
-	//	sedimentDeposit += sedimentAmount * FMath::Clamp(1.0f + lowestRoute.Z, 0.0f, 1.0f);
-
-	//	sedimentAmount -= sedimentDeposit;
-
-	//	velocity = lowestRoute;
-
-	//	erodeHeightMapAtIndex(cX, cY, (sedimentUptake + (sedimentDeposit * -1.0f)));
-
-	//	waterAmount -= pTerrainConfig->DropletEvaporationRate;
-
-	//	cX = newCx;
-	//	cY = newCy;
 }
 
 void FCGTerrainGeneratorWorker::ProcessPerBlockGeometry()

@@ -1,9 +1,7 @@
 #pragma once
 
 #include "CashGen/Public/Struct/CGLODConfig.h"
-
-#include <UnrealFastNoisePlugin/Public/UFNBlendModule.h>
-#include <UnrealFastNoisePlugin/Public/UFNNoiseGenerator.h>
+#include "CashGen/Public/WorldHeightInterface.h"
 
 #include "CGTerrainConfig.generated.h"
 
@@ -14,17 +12,13 @@ struct FCGTerrainConfig
 	GENERATED_BODY()
 
 	FCGTerrainConfig()
-		: NoiseGenerator(nullptr)
-		, BiomeBlendGenerator(nullptr)
-		, WaterMaterialInstance(nullptr)
+		:WaterMaterialInstance(nullptr)
 	{
 	}
 
 	/** Noise Generator configuration struct */
-	UPROPERTY()
-	UUFNNoiseGenerator* NoiseGenerator;
-	UPROPERTY()
-	UUFNNoiseGenerator* BiomeBlendGenerator;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tattiebogle|Data Source")
+	TScriptInterface<IWorldHeightInterface> WorldHeightInterface;
 	/** Use ASync collision cooking for terrain mesh (Recommended) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|System")
 	bool UseAsyncCollision = true;
@@ -51,24 +45,6 @@ struct FCGTerrainConfig
 	/** Multiplier for heightmap*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "cashGen|Scale")
 	float Amplitude = 5000.0f;
-	/** Droplet erosion droplet amount *EXPERIMENTAL* **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Erosion")
-	int32 DropletAmount = 0;
-	/** Droplet erosion deposition rate *EXPERIMENTAL* **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Erosion")
-	float DropletErosionMultiplier = 1.0f;
-	/** Droplet erosion deposition rate *EXPERIMENTAL* **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Erosion")
-	float DropletDespositionMultiplier = 1.0f;
-	/** Droplet erosion deposition Theta *EXPERIMENTAL* **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Erosion")
-	float DropletSedimentCapacity = 10.0f;
-	/** Droplet erosion evaporation rate *EXPERIMENTAL* **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Erosion")
-	float DropletEvaporationRate = 0.1f;
-	/** Erosion floor cutoff **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Erosion")
-	float DropletErosionFloor = 0.0f;
 
 	/** Material for the terrain mesh */
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen|Rendering")
