@@ -1,3 +1,8 @@
+electric-monk's fork of cashgenUE:
+- Removes dependency on UnrealFastNoise, replacing it with an interface which provides the height map.
+
+Original readme:
+
 # cashgenUE
 Procedural Terrain Generator for UnrealEngine 4.25
 
