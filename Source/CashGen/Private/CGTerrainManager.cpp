@@ -258,11 +258,11 @@ TArray<FCGSector> ACGTerrainManager::GetRelevantSectorsForActor(const AActor* aA
 	result.Add(rootSector);
 
 	const int sweepRange = myTerrainConfig.LODs[myTerrainConfig.LODs.Num() - 1].SectorRadius;
-	const int sweepRange2 = sweepRange * sweepRange;
+	const int sweepRange2 = sweepRange * 2;
 
-	for (int x = 0; x < sweepRange * 2; x++)
+	for (int x = 0; x < sweepRange2; x++)
 	{
-		for (int y = 0; y < sweepRange * 2; y++)
+		for (int y = 0; y < sweepRange2; y++)
 		{
 			FCGSector newSector = FCGSector(rootSector.X - sweepRange + x, rootSector.Y - sweepRange + y, 0);
 			FIntVector2 diff = newSector.mySector - rootSector;
